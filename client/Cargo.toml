@@ -1,0 +1,9 @@
+[package]
+name = "clash"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+moonwalk = { git = "https://github.com/solarmoff-afk/MoonWalk", package = "moonwalk" }
+moonwalk_bootstrap = { git = "https://github.com/solarmoff-afk/MoonWalk", package = "moonwalk_bootstrap" }
+glam = { version = "0.24", features = ["scalar-math", "bytemuck"] }
