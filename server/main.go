@@ -42,7 +42,8 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	// 1. Апгрейд протокола до WebSockets
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Ошибка апгрейда соединения:", err) // Просто пишем в лог
+		return                                          // И выходим из функции только для этого юзера
 	}
 
 	// Создаем нового игрока (пока просто по адресу)
