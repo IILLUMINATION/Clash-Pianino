@@ -7,10 +7,8 @@ import (
 	"net/http"
 	"sync"
 
-	// Импортируем сгенерированный код (путь зависит от названия твоего модуля в go.mod)
-	// Я предполагаю, что твой модуль называется "server" или "clash-backend"
-	// Если будет ругаться, поменяй путь ниже на тот, что в go.mod + /pb
-	pb "server/pb"
+	// Правильный импорт модуля
+	pb "clash-server/pb"
 
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -49,10 +47,12 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		log.Println("Ошибка апгрейда:", err)
 		return
 	}
+	
+	// В данном простом примере defer закроет соединение, когда функция завершится.
+	// Мы используем select{} ниже, чтобы функция не завершалась, пока идет игра.
 	defer ws.Close()
 
-	// 1. Читаем ПЕРВОЕ сообщение от клиента.
-	// Друг должен сразу после коннекта отправить JoinQueueRequest в бинарном виде.
+	// 1. Читаем ПЕРВОЕ сообщение от клиента (JoinQueueRequest)
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		log.Println("Ошибка чтения:", err)
@@ -92,11 +92,18 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		// === НАШЛИ СОПЕРНИКА ===
 		opponent := waitingPool[opponentIndex]
 
-		// Удаляем соперника из очереди (очень важно, чтобы срез не сломался)
+		// Удаляем соперника из очереди
 		waitingPool = append(waitingPool[:opponentIndex], waitingPool[opponentIndex+1:]...)
 		mutex.Unlock()
 
+		// Запускаем матч
 		startMatch(player, opponent)
+
+		// Чтобы соединение player (текущего) не закрылось из-за defer,
+		// здесь запускаем вечное ожидание (пока игра не закончится или сокет не отвалится).
+		// В будущем тут будет игровой цикл.
+		select {}
+
 	} else {
 		// === НИКОГО НЕТ, ЖДЕМ ===
 		waitingPool = append(waitingPool, player)
@@ -104,12 +111,9 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Игрок %s добавлен в очередь ожидания.\n", player.ID)
 
 		// Держим соединение открытым, пока нас не вызовут из startMatch
-		// В реальном проекте тут нужен канал для ожидания, но для простоты
-		// пока просто бесконечный цикл чтения, чтобы сокет не закрылся.
 		for {
 			if _, _, err := ws.ReadMessage(); err != nil {
-				// Если игрок отключился пока ждал - надо бы удалить его из waitingPool
-				// Но это домашка на потом :)
+				// Если игрок отвалился — по-хорошему надо удалить его из waitingPool
 				break
 			}
 		}
@@ -121,7 +125,7 @@ func startMatch(p1, p2 *Player) {
 
 	roomID := fmt.Sprintf("room_%s_%s", p1.ID, p2.ID)
 
-	// Отправляем ответ P1 (что он играет против P2)
+	// Отправляем ответ P1
 	resp1 := &pb.MatchFoundResponse{
 		OpponentId:       p2.ID,
 		OpponentTrophies: p2.Trophies,
@@ -129,7 +133,7 @@ func startMatch(p1, p2 *Player) {
 	}
 	sendProto(p1.Conn, resp1)
 
-	// Отправляем ответ P2 (что он играет против P1)
+	// Отправляем ответ P2
 	resp2 := &pb.MatchFoundResponse{
 		OpponentId:       p1.ID,
 		OpponentTrophies: p1.Trophies,
