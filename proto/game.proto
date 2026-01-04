@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package game;
+
+// Указываем, куда упадет сгенерированный Go код
+option go_package = "./pb";
+
+// Сообщение 1: Игрок отправляет серверу "Я готов, у меня столько кубков"
+message JoinQueueRequest {
+  string player_id = 1;
+  int32 trophies = 2; // Количество кубков
+}
+
+// Сообщение 2: Сервер отвечает "Игра найдена!"
+message MatchFoundResponse {
+  string opponent_id = 1;
+  int32 opponent_trophies = 2;
+  string room_id = 3; // ID комнаты/боя
+}
