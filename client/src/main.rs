@@ -1,5 +1,5 @@
 use moonwalk::{MoonWalk, ObjectId};
-use moonwalk_bootstrap::{Application, Runner, WindowSettings};
+use moonwalk_bootstrap::{Application, Runner, WindowSettings, TouchPhase};
 use glam::{Vec2, Vec4};
 
 use tungstenite::{connect, Message};
@@ -39,6 +39,7 @@ impl Application for Game {
         mw.set_size(button_bg, button_size);
         mw.set_color(button_bg, Vec4::new(0.0, 0.5, 0.4, 1.0));
         mw.set_z_index(button_bg, 0.01);
+        mw.set_hit_group(button_bg, 1);
 
         let text = "v boy";
         let text_size = mw.measure_text(text, hundo_font, 16.0, 9999.0);
@@ -54,6 +55,23 @@ impl Application for Game {
 
     fn on_draw(&mut self, mw: &mut MoonWalk) {
         
+    }
+
+    fn on_touch(&mut self, mw: &mut MoonWalk, phase: TouchPhase, position: Vec2) {
+        if let Some(hit_id) = mw.resolve_hit(position, Vec2::new(1.0, 1.0), 1) {
+            match phase {
+                TouchPhase::Started => {
+                    mw.set_color(hit_id, Vec4::new(0.0, 0.3, 0.2, 1.0));
+                }
+
+                TouchPhase::Ended | TouchPhase::Cancelled => {
+                    mw.set_color(hit_id, Vec4::new(0.0, 0.5, 0.4, 1.0));
+                    println!("Подключение...");
+                }
+
+                _ => {}
+            }
+        }
     }
 
     fn on_resize(&mut self, mw: &mut MoonWalk, viewport: Vec2) {
