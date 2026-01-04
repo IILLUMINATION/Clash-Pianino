@@ -1,9 +1,11 @@
 [package]
 name = "clash"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 moonwalk = { git = "https://github.com/solarmoff-afk/MoonWalk", package = "moonwalk" }
 moonwalk_bootstrap = { git = "https://github.com/solarmoff-afk/MoonWalk", package = "moonwalk_bootstrap" }
 glam = { version = "0.24", features = ["scalar-math", "bytemuck"] }
+tungstenite = "0.20"
+url = "2.4"
