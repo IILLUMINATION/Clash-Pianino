@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(target_os = "android")]
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn android_main(app: AndroidApp) {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Info)
@@ -125,3 +125,6 @@ fn android_main(app: AndroidApp) {
     let settings = WindowSettings::new("Game Android", 0.0, 0.0);
     Runner::run(app_game, settings, app).unwrap();
 }
+
+#[cfg(target_os = "android")]
+fn main() {}
